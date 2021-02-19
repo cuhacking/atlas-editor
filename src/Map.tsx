@@ -7,7 +7,7 @@ interface MapProps {
   longitude: number
 }
 
-const Map: React.FC<MapProps> =  ({latitude, longitude}) =>{
+const Map =  ({latitude, longitude}: MapProps) =>{
   const [viewport, setViewport] = useState({
     width: '100vw',
     height: '100vh',
