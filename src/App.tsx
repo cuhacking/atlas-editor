@@ -1,13 +1,49 @@
-import React from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
+import { FeatureCollection } from 'geojson';
 import Map from './Map';
+import styled, {
+  createGlobalStyle // TODO: Establish a theme and hook this up to everything
+} from 'styled-components';
+import Left from './Left';
+import Right from './Right';
 
-function App() {
-  
+const { ipcRenderer } = window.require('electron');
+
+const StyledDiv = styled.div`
+  display: flex;
+  width: 100vw;
+  height: 100vh;
+`;
+
+const GlobalStyle = createGlobalStyle`
+  body {
+    margin: 0;
+  }
+`;
+
+const App: React.FC = () => {
+  const [data, setData] = useState<FeatureCollection | null>(null);
+  const onFileOpen = useCallback((event, contents: FeatureCollection) => {
+    console.log('The JSONified contents of the file is', contents);
+    setData(contents);
+  }, []);
+  const fileChannel = 'file-content';
+  useEffect(() => {
+    ipcRenderer.on(fileChannel, onFileOpen);
+
+    return () => ipcRenderer.removeListener(fileChannel, onFileOpen);
+  }, []);
+
   return (
-    <div className="App">
-      <Map latitude={45.3854} longitude={-75.69608}/>
-    </div>
+    <>
+      <GlobalStyle />
+      <StyledDiv className='App'>
+        <Left />
+        <Map latitude={45.3854} longitude={-75.69608} data={data} />
+        <Right />
+      </StyledDiv>
+    </>
   );
-}
+};
 
 export default App;
