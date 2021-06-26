@@ -25,7 +25,7 @@ const App: React.FC = () => {
   const fileChannel = 'file-content';
   const [data, setData] = useState<FeatureCollection | null>(null);
 
-  const onFileOpen = useCallback((event, contents: FeatureCollection) => {
+  const onFileOpen = useCallback((event: any, contents: FeatureCollection) => {
     console.log(`RENDERER: ${fileChannel}`, contents);
     setData(contents);
   }, []);

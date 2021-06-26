@@ -14,6 +14,7 @@ import * as fs from 'fs';
 const util = require('util');
 const readFile = util.promisify(fs.readFile);
 const readDir = util.promisify(fs.readdir);
+
 let win: BrowserWindow | null = null;
 
 const template: MenuItemConstructorOptions[] = [
