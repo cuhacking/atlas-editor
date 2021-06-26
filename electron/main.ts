@@ -11,7 +11,9 @@ import installExtension, {
   REACT_DEVELOPER_TOOLS
 } from 'electron-devtools-installer';
 import * as fs from 'fs';
-
+const util = require('util');
+const readFile = util.promisify(fs.readFile);
+const readDir = util.promisify(fs.readdir);
 let win: BrowserWindow | null = null;
 
 const template: MenuItemConstructorOptions[] = [
@@ -101,22 +103,35 @@ app.on('activate', () => {
 });
 
 function openFile() {
+  const fileChannel = 'file-content';
   dialog
     .showOpenDialog({
-      properties: ['openFile', 'multiSelections'],
-      filters: [{ name: 'Maps', extensions: ['json', 'geojson'] }]
+      properties: ['openDirectory']
     })
     .then((data) => {
       if (!data) return;
-
       const { filePaths } = data;
-      // TODO: Change the fact that implementation currently only supports opening one file at a time.
+      console.log(`filePath`, filePaths[0]);
+      let jsonFiles: any[] = [];
 
-      fs.readFile(filePaths[0], 'utf-8', (err, data) => {
-        // We could also probably just send an alert/dialogue saying something went wrong
-        if (err) return;
-
-        win?.webContents.send('file-content', JSON.parse(data.toString()));
+      readDir(filePaths[0]).then((files: any) => {
+        files.forEach((file: string) => {
+          const fileType = file.split('.').pop()?.toLowerCase();
+          if (fileType === 'json' || fileType === 'geojson') {
+            console.log('(geo)json found');
+            jsonFiles.push(readFile(`${filePaths[0]}${path.sep}${file}`));
+          }
+        });
+        Promise.all(jsonFiles).then((filesData) => {
+          console.log(
+            `MAIN: ${fileChannel}`,
+            filesData.map((data) => data.toString())
+          );
+          win?.webContents.send(
+            fileChannel,
+            filesData.map((data) => data.toString())
+          );
+        });
       });
     });
 }

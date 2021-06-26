@@ -22,12 +22,14 @@ const GlobalStyle = createGlobalStyle`
 `;
 
 const App: React.FC = () => {
+  const fileChannel = 'file-content';
   const [data, setData] = useState<FeatureCollection | null>(null);
+
   const onFileOpen = useCallback((event, contents: FeatureCollection) => {
-    console.log('The JSONified contents of the file is', contents);
+    console.log(`RENDERER: ${fileChannel}`, contents);
     setData(contents);
   }, []);
-  const fileChannel = 'file-content';
+
   useEffect(() => {
     ipcRenderer.on(fileChannel, onFileOpen);
 
