@@ -10,10 +10,7 @@ import * as isDev from 'electron-is-dev';
 import installExtension, {
   REACT_DEVELOPER_TOOLS
 } from 'electron-devtools-installer';
-import * as fs from 'fs';
-const util = require('util');
-const readFile = util.promisify(fs.readFile);
-const readDir = util.promisify(fs.readdir);
+import { promises as fs } from 'fs';
 
 let win: BrowserWindow | null = null;
 
@@ -24,7 +21,7 @@ const template: MenuItemConstructorOptions[] = [
       {
         label: 'Open File',
         accelerator: 'CmdOrCtrl+O',
-        click: openFile
+        click: openFolder
       }
     ]
   },
@@ -103,36 +100,33 @@ app.on('activate', () => {
   }
 });
 
-function openFile() {
+async function openFolder() {
   const fileChannel = 'file-content';
-  dialog
-    .showOpenDialog({
+  try {
+    const data = await dialog.showOpenDialog({
       properties: ['openDirectory']
-    })
-    .then((data) => {
-      if (!data) return;
-      const { filePaths } = data;
-      console.log(`filePath`, filePaths[0]);
-      let jsonFiles: any[] = [];
-
-      readDir(filePaths[0]).then((files: any) => {
-        files.forEach((file: string) => {
-          const fileType = file.split('.').pop()?.toLowerCase();
-          if (fileType === 'json' || fileType === 'geojson') {
-            console.log('(geo)json found');
-            jsonFiles.push(readFile(`${filePaths[0]}${path.sep}${file}`));
-          }
-        });
-        Promise.all(jsonFiles).then((filesData) => {
-          console.log(
-            `MAIN: ${fileChannel}`,
-            filesData.map((data) => data.toString())
-          );
-          win?.webContents.send(
-            fileChannel,
-            filesData.map((data) => data.toString())
-          );
-        });
-      });
     });
+    const { filePaths } = data;
+    console.log(`filePath`, filePaths[0]);
+    let promises: Promise<any>[] = [];
+
+    const files = await fs.readdir(filePaths[0]);
+    files.forEach((file: string) => {
+      const fileType = file.split('.').pop()?.toLowerCase();
+      if (fileType === 'json' || fileType === 'geojson') {
+        console.log('(geo)json found');
+        promises.push(fs.readFile(`${filePaths[0]}${path.sep}${file}`));
+      }
+    });
+
+    const mapData = await Promise.all(promises);
+    console.log(`MAIN: ${fileChannel}: `);
+    console.dir(mapData.map((data) => JSON.parse(data.toString())));
+    win?.webContents.send(
+      fileChannel,
+      mapData.map((data) => JSON.parse(data.toString()))
+    );
+  } catch (error) {
+    console.error(error);
+  }
 }

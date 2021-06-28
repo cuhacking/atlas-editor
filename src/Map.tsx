@@ -7,7 +7,7 @@ import { FeatureCollection } from 'geojson';
 interface MapProps {
   latitude: number;
   longitude: number;
-  data: FeatureCollection | null;
+  data: FeatureCollection[] | null;
 }
 
 const MapContainer = styled.div`
@@ -24,7 +24,7 @@ const Map: React.FC<MapProps> = ({ latitude, longitude, data }: MapProps) => {
   });
 
   const containerRef = useRef<HTMLDivElement | null>(null);
-
+  console.log('What Im rendering is: ', data ? data : 'not here yet');
   return (
     <MapContainer ref={containerRef}>
       <ReactMapGL
@@ -34,17 +34,19 @@ const Map: React.FC<MapProps> = ({ latitude, longitude, data }: MapProps) => {
         height='100%'
         onViewportChange={setViewport}
       >
-        {data && (
-          <Source type='geojson' data={data}>
-            <Layer
-              id='test'
-              type='fill'
-              paint={{
-                'fill-color': '#A150F2'
-              }}
-            />
-          </Source>
-        )}
+        {data &&
+          data.map((datum, i) => (
+            // var data: FeatureCollection<Geometry, GeoJsonProperties>
+            <Source key={`map=src-${i}`} type='geojson' data={datum}>
+              <Layer
+                id='test'
+                type='fill'
+                paint={{
+                  'fill-color': '#A150F2'
+                }}
+              />
+            </Source>
+          ))}
       </ReactMapGL>
     </MapContainer>
   );

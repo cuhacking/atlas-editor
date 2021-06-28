@@ -1,3 +1,4 @@
+/* eslint @typescript-eslint/no-var-requires: "off" */
 import React, { useCallback, useEffect, useState } from 'react';
 import { FeatureCollection } from 'geojson';
 import Map from './Map';
@@ -26,11 +27,11 @@ const carleton = {
   longitude: -75.69608
 };
 
+const fileChannel = 'file-content';
 const App: React.FC = () => {
-  const fileChannel = 'file-content';
-  const [data, setData] = useState<FeatureCollection | null>(null);
+  const [data, setData] = useState<FeatureCollection[] | null>(null);
 
-  const onFileOpen = useCallback((event: any, contents: FeatureCollection) => {
+  const onFileOpen = useCallback((event, contents: FeatureCollection[]) => {
     console.log(`RENDERER: ${fileChannel}`, contents);
     setData(contents);
   }, []);
