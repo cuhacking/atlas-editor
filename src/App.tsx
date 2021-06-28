@@ -7,6 +7,7 @@ import styled, {
 } from 'styled-components';
 import Left from './Left';
 import Properties from './Properties';
+import type { IpcRendererEvent } from 'electron';
 
 const { ipcRenderer } = window.require('electron');
 
@@ -31,10 +32,13 @@ const fileChannel = 'file-content';
 const App: React.FC = () => {
   const [data, setData] = useState<FeatureCollection[] | null>(null);
 
-  const onFileOpen = useCallback((event, contents: FeatureCollection[]) => {
-    console.log(`RENDERER: ${fileChannel}`, contents);
-    setData(contents);
-  }, []);
+  const onFileOpen = useCallback(
+    (event: IpcRendererEvent, contents: FeatureCollection[]) => {
+      console.log(`RENDERER: ${fileChannel}`, contents);
+      setData(contents);
+    },
+    []
+  );
 
   useEffect(() => {
     ipcRenderer.on(fileChannel, onFileOpen);
