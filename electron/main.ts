@@ -108,23 +108,25 @@ async function openFolder() {
     });
     const { filePaths } = data;
     console.log(`filePath`, filePaths[0]);
-    let promises: Promise<any>[] = [];
-
     const files = await fs.readdir(filePaths[0]);
-    files.forEach((file: string) => {
+    const promises = files.map((file: string) => {
       const fileType = file.split('.').pop()?.toLowerCase();
       if (fileType === 'json' || fileType === 'geojson') {
         console.log('(geo)json found');
-        promises.push(fs.readFile(`${filePaths[0]}${path.sep}${file}`));
+        return fs.readFile(`${filePaths[0]}${path.sep}${file}`);
       }
     });
 
     const mapData = await Promise.all(promises);
     console.log(`MAIN: ${fileChannel}: `);
-    console.dir(mapData.map((data) => JSON.parse(data.toString())));
+    console.dir(
+      mapData.map((data) => (data ? JSON.parse(data.toString()) : null))
+    );
     win?.webContents.send(
       fileChannel,
-      mapData.map((data) => JSON.parse(data.toString()))
+      mapData
+        .map((data) => (data ? JSON.parse(data.toString()) : null))
+        .filter((data) => !!data)
     );
   } catch (error) {
     console.error(error);
