@@ -1,11 +1,8 @@
 import React from 'react';
 import { FeatureCollection } from 'geojson';
 
-import { Text } from './common';
-
 interface PropertyProps {
   info: FeatureCollection | null;
-  // children?: ReactNode;
 }
 
 const Properties: React.FC<PropertyProps> = (props: PropertyProps) => {
@@ -52,7 +49,7 @@ const Properties: React.FC<PropertyProps> = (props: PropertyProps) => {
           </ul>
         </>
       ) : (
-        'Open a file qt'
+        'Open a file!'
       )}
     </div>
   );
