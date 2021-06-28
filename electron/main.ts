@@ -10,7 +10,7 @@ import * as isDev from 'electron-is-dev';
 import installExtension, {
   REACT_DEVELOPER_TOOLS
 } from 'electron-devtools-installer';
-import * as fs from 'fs';
+import { promises as fs } from 'fs';
 
 let win: BrowserWindow | null = null;
 
@@ -21,7 +21,7 @@ const template: MenuItemConstructorOptions[] = [
       {
         label: 'Open File',
         accelerator: 'CmdOrCtrl+O',
-        click: openFile
+        click: openFolder
       }
     ]
   },
@@ -100,23 +100,35 @@ app.on('activate', () => {
   }
 });
 
-function openFile() {
-  dialog
-    .showOpenDialog({
-      properties: ['openFile', 'multiSelections'],
-      filters: [{ name: 'Maps', extensions: ['json', 'geojson'] }]
-    })
-    .then((data) => {
-      if (!data) return;
-
-      const { filePaths } = data;
-      // TODO: Change the fact that implementation currently only supports opening one file at a time.
-
-      fs.readFile(filePaths[0], 'utf-8', (err, data) => {
-        // We could also probably just send an alert/dialogue saying something went wrong
-        if (err) return;
-
-        win?.webContents.send('file-content', JSON.parse(data.toString()));
-      });
+async function openFolder() {
+  const fileChannel = 'file-content';
+  try {
+    const data = await dialog.showOpenDialog({
+      properties: ['openDirectory']
     });
+    const { filePaths } = data;
+    console.log(`filePath`, filePaths[0]);
+    const files = await fs.readdir(filePaths[0]);
+    const promises = files.map((file: string) => {
+      const fileType = file.split('.').pop()?.toLowerCase();
+      if (fileType === 'json' || fileType === 'geojson') {
+        console.log('(geo)json found');
+        return fs.readFile(`${filePaths[0]}${path.sep}${file}`);
+      }
+    });
+
+    const mapData = await Promise.all(promises);
+    console.log(`MAIN: ${fileChannel}: `);
+    console.dir(
+      mapData.map((data) => (data ? JSON.parse(data.toString()) : null))
+    );
+    win?.webContents.send(
+      fileChannel,
+      mapData
+        .map((data) => (data ? JSON.parse(data.toString()) : null))
+        .filter((data) => !!data)
+    );
+  } catch (error) {
+    console.error(error);
+  }
 }
