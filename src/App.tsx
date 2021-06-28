@@ -5,7 +5,7 @@ import styled, {
   createGlobalStyle // TODO: Establish a theme and hook this up to everything
 } from 'styled-components';
 import Left from './Left';
-import Right from './Right';
+import Properties from './Properties';
 
 const { ipcRenderer } = window.require('electron');
 
@@ -21,6 +21,11 @@ const GlobalStyle = createGlobalStyle`
   }
 `;
 
+const carleton = {
+  latitude: 45.3854,
+  longitude: -75.69608
+};
+
 const App: React.FC = () => {
   const fileChannel = 'file-content';
   const [data, setData] = useState<FeatureCollection | null>(null);
@@ -33,7 +38,9 @@ const App: React.FC = () => {
   useEffect(() => {
     ipcRenderer.on(fileChannel, onFileOpen);
 
-    return () => ipcRenderer.removeListener(fileChannel, onFileOpen);
+    return () => {
+      ipcRenderer.removeListener(fileChannel, onFileOpen);
+    };
   }, []);
 
   return (
@@ -41,8 +48,12 @@ const App: React.FC = () => {
       <GlobalStyle />
       <StyledDiv className='App'>
         <Left />
-        <Map latitude={45.3854} longitude={-75.69608} data={data} />
-        <Right />
+        <Map
+          latitude={carleton.latitude}
+          longitude={carleton.longitude}
+          data={data}
+        />
+        <Properties info={data} />
       </StyledDiv>
     </>
   );
