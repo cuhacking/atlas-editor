@@ -31,12 +31,10 @@ const carleton = {
 
 const fileChannel = 'file-content';
 const App: React.FC = () => {
-  const [feature, setFeature] = useState<Feature[] | null>(null);
+  const [feature, setFeature] = useState<Feature[] | undefined>(undefined);
 
   const displayFeature = useCallback(({ features }: MapEvent) => {
-    if (features) {
-      setFeature(features);
-    }
+    setFeature(features);
   }, []);
   const [mapData, setData] = useState<FeatureCollection[] | null>(null);
 
