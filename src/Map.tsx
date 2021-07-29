@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useCallback } from 'react';
 import styled from 'styled-components';
 import ReactMapGL, {
   Source,
@@ -34,6 +34,13 @@ const Map: React.FC<MapProps> = ({
     zoom: 16
   });
 
+  const [hoverSource, setHoverSource] = useState('');
+
+  const handleHover = useCallback(({ features }: MapEvent) => {
+    setHoverSource(features && features.length > 0 ? features[0].source : '');
+  }, []);
+  const handleCursor = () => (hoverSource ? 'pointer' : 'grab');
+
   const containerRef = useRef<HTMLDivElement | null>(null);
   return (
     <MapContainer ref={containerRef}>
@@ -44,19 +51,32 @@ const Map: React.FC<MapProps> = ({
         height='100%'
         onViewportChange={setViewport}
         onClick={displayFeature}
+        onHover={handleHover}
+        getCursor={handleCursor}
       >
         {data &&
-          data.map((datum, i) => (
-            <Source key={`map=src-${i}`} type='geojson' data={datum}>
-              <Layer
-                id='test'
-                type='fill'
-                paint={{
-                  'fill-color': '#A150F2'
-                }}
-              />
-            </Source>
-          ))}
+          data.map((datum, i) => {
+            const key = `map=src-${i}`;
+            return (
+              <Source id={key} key={key} type='geojson' data={datum}>
+                <Layer
+                  id='layerFill'
+                  type='fill'
+                  paint={{
+                    'fill-color': '#A150F2'
+                  }}
+                />
+                <Layer
+                  id='layerLine'
+                  type='line'
+                  paint={{
+                    'line-width': 4,
+                    'line-color': hoverSource === key ? '#5e219c' : '#A150F2'
+                  }}
+                />
+              </Source>
+            );
+          })}
       </ReactMapGL>
     </MapContainer>
   );
