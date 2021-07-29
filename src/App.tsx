@@ -1,6 +1,6 @@
 /* eslint @typescript-eslint/no-var-requires: "off" */
 import React, { useCallback, useEffect, useState } from 'react';
-import { FeatureCollection } from 'geojson';
+import { FeatureCollection, Feature } from 'geojson';
 import Map from './Map';
 import styled, {
   createGlobalStyle // TODO: Establish a theme and hook this up to everything
@@ -8,6 +8,7 @@ import styled, {
 import Left from './Left';
 import Properties from './Properties';
 import type { IpcRendererEvent } from 'electron';
+import { MapEvent } from 'react-map-gl';
 
 const { ipcRenderer } = window.require('electron');
 
@@ -30,12 +31,18 @@ const carleton = {
 
 const fileChannel = 'file-content';
 const App: React.FC = () => {
-  const [data, setData] = useState<FeatureCollection[] | null>(null);
+  const [feature, setFeature] = useState<Feature[] | undefined>(undefined);
+
+  const displayFeature = useCallback(({ features }: MapEvent) => {
+    setFeature(features);
+  }, []);
+  const [mapData, setData] = useState<FeatureCollection[] | null>(null);
 
   const onFileOpen = useCallback(
     (event: IpcRendererEvent, contents: FeatureCollection[]) => {
       console.log(`RENDERER: ${fileChannel}`, contents);
       setData(contents);
+      // TODO: Add file validation
     },
     []
   );
@@ -56,9 +63,10 @@ const App: React.FC = () => {
         <Map
           latitude={carleton.latitude}
           longitude={carleton.longitude}
-          data={data}
+          data={mapData}
+          displayFeature={displayFeature}
         />
-        <Properties info={data} />
+        <Properties features={feature} />
       </StyledDiv>
     </>
   );

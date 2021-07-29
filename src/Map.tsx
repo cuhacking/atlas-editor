@@ -1,6 +1,11 @@
 import React, { useState, useRef } from 'react';
 import styled from 'styled-components';
-import ReactMapGL, { Source, Layer, ViewportProps } from 'react-map-gl';
+import ReactMapGL, {
+  Source,
+  Layer,
+  ViewportProps,
+  MapEvent
+} from 'react-map-gl';
 import 'mapbox-gl/dist/mapbox-gl.css';
 import { FeatureCollection } from 'geojson';
 
@@ -8,6 +13,7 @@ interface MapProps {
   latitude: number;
   longitude: number;
   data: FeatureCollection[] | null;
+  displayFeature: (e: MapEvent) => void;
 }
 
 const MapContainer = styled.div`
@@ -16,7 +22,12 @@ const MapContainer = styled.div`
   position: relative;
 `;
 
-const Map: React.FC<MapProps> = ({ latitude, longitude, data }: MapProps) => {
+const Map: React.FC<MapProps> = ({
+  data,
+  displayFeature,
+  latitude,
+  longitude
+}: MapProps) => {
   const [viewport, setViewport] = useState<ViewportProps>({
     latitude: latitude,
     longitude: longitude,
@@ -24,7 +35,6 @@ const Map: React.FC<MapProps> = ({ latitude, longitude, data }: MapProps) => {
   });
 
   const containerRef = useRef<HTMLDivElement | null>(null);
-  console.log('What Im rendering is: ', data ? data : 'not here yet');
   return (
     <MapContainer ref={containerRef}>
       <ReactMapGL
@@ -33,10 +43,10 @@ const Map: React.FC<MapProps> = ({ latitude, longitude, data }: MapProps) => {
         width='100%'
         height='100%'
         onViewportChange={setViewport}
+        onClick={displayFeature}
       >
         {data &&
           data.map((datum, i) => (
-            // var data: FeatureCollection<Geometry, GeoJsonProperties>
             <Source key={`map=src-${i}`} type='geojson' data={datum}>
               <Layer
                 id='test'
