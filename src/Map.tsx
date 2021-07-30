@@ -1,4 +1,4 @@
-import React, { useState, useRef, useCallback } from 'react';
+import React, { useState, useRef } from 'react';
 import styled from 'styled-components';
 import ReactMapGL, {
   Source,
@@ -7,12 +7,7 @@ import ReactMapGL, {
   MapEvent
 } from 'react-map-gl';
 import 'mapbox-gl/dist/mapbox-gl.css';
-import {
-  FeatureCollection,
-  Feature,
-  Geometry,
-  GeoJsonProperties
-} from 'geojson';
+import { FeatureCollection } from 'geojson';
 
 interface MapProps {
   latitude: number;
@@ -39,15 +34,17 @@ const Map: React.FC<MapProps> = ({
     zoom: 16
   });
 
-  const [hoveredFeature, setHoveredFeature] = useState<
-    Feature<Geometry, GeoJsonProperties>
-  >({} as Feature);
+  const [hoveredFeatures, setHoveredFeatures] = useState<FeatureCollection>({
+    type: 'FeatureCollection',
+    features: []
+  } as FeatureCollection);
 
-  const handleHover = useCallback(({ features }: MapEvent) => {
-    setHoveredFeature(
-      Array.isArray(features) && features.length > 0 ? features[0] : undefined
-    );
-  }, []);
+  const handleHover = ({ features }: MapEvent) => {
+    setHoveredFeatures({
+      type: 'FeatureCollection',
+      features
+    } as FeatureCollection);
+  };
 
   const containerRef = useRef<HTMLDivElement | null>(null);
   return (
@@ -65,32 +62,27 @@ const Map: React.FC<MapProps> = ({
         }
       >
         {data &&
-          data.map((datum, i) => {
-            const key = `map=src-${i}`;
-            return (
-              <Source id={key} key={key} type='geojson' data={datum}>
-                <Layer
-                  id='layerFill'
-                  type='fill'
-                  paint={{
-                    'fill-color': '#A150F2'
-                  }}
-                />
-              </Source>
-            );
-          })}
-        {hoveredFeature ? (
-          <Source id='hovered' type='geojson' data={hoveredFeature}>
-            <Layer
-              id='layerLine'
-              type='line'
-              paint={{
-                'line-width': 2,
-                'line-color': '#2ECC71'
-              }}
-            />
-          </Source>
-        ) : null}
+          data.map((datum, i) => (
+            <Source key={`map=src-${i}`} type='geojson' data={datum}>
+              <Layer
+                id='layerFill'
+                type='fill'
+                paint={{
+                  'fill-color': '#A150F2'
+                }}
+              />
+            </Source>
+          ))}
+        <Source id='hovered' type='geojson' data={hoveredFeatures}>
+          <Layer
+            id='layerLine'
+            type='line'
+            paint={{
+              'line-width': 2,
+              'line-color': '#2ECC71'
+            }}
+          />
+        </Source>
       </ReactMapGL>
     </MapContainer>
   );
