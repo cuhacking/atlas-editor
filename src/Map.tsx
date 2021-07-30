@@ -7,7 +7,12 @@ import ReactMapGL, {
   MapEvent
 } from 'react-map-gl';
 import 'mapbox-gl/dist/mapbox-gl.css';
-import { FeatureCollection } from 'geojson';
+import {
+  FeatureCollection,
+  Feature,
+  Geometry,
+  GeoJsonProperties
+} from 'geojson';
 
 interface MapProps {
   latitude: number;
@@ -34,11 +39,13 @@ const Map: React.FC<MapProps> = ({
     zoom: 16
   });
 
-  const [hoveredFeature, setHoveredFeature] = useState(undefined);
+  const [hoveredFeature, setHoveredFeature] = useState<
+    Feature<Geometry, GeoJsonProperties>
+  >({} as Feature);
 
   const handleHover = useCallback(({ features }: MapEvent) => {
     setHoveredFeature(
-      Array.isArray(features) && features.length > 0 ? features[0] : ''
+      Array.isArray(features) && features.length > 0 ? features[0] : undefined
     );
   }, []);
 
