@@ -34,6 +34,18 @@ const Map: React.FC<MapProps> = ({
     zoom: 16
   });
 
+  const [hoveredFeatures, setHoveredFeatures] = useState<FeatureCollection>({
+    type: 'FeatureCollection',
+    features: []
+  } as FeatureCollection);
+
+  const handleHover = ({ features }: MapEvent) => {
+    setHoveredFeatures({
+      type: 'FeatureCollection',
+      features
+    } as FeatureCollection);
+  };
+
   const containerRef = useRef<HTMLDivElement | null>(null);
   return (
     <MapContainer ref={containerRef}>
@@ -44,12 +56,16 @@ const Map: React.FC<MapProps> = ({
         height='100%'
         onViewportChange={setViewport}
         onClick={displayFeature}
+        onHover={handleHover}
+        interactiveLayerIds={
+          Array.isArray(data) && data.length > 0 ? ['layerFill'] : []
+        }
       >
         {data &&
           data.map((datum, i) => (
             <Source key={`map=src-${i}`} type='geojson' data={datum}>
               <Layer
-                id='test'
+                id='layerFill'
                 type='fill'
                 paint={{
                   'fill-color': '#A150F2'
@@ -57,6 +73,16 @@ const Map: React.FC<MapProps> = ({
               />
             </Source>
           ))}
+        <Source id='hovered' type='geojson' data={hoveredFeatures}>
+          <Layer
+            id='layerLine'
+            type='line'
+            paint={{
+              'line-width': 2,
+              'line-color': '#2ECC71'
+            }}
+          />
+        </Source>
       </ReactMapGL>
     </MapContainer>
   );
