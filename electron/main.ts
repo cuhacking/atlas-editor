@@ -108,26 +108,27 @@ async function openFolder() {
     });
     const { filePaths } = data;
     console.log(`filePath`, filePaths[0]);
-    const files = await fs.readdir(filePaths[0]);
-    const promises = files.map((file: string) => {
-      const fileType = file.split('.').pop()?.toLowerCase();
-      if (fileType === 'json' || fileType === 'geojson') {
-        console.log('(geo)json found');
-        return fs.readFile(`${filePaths[0]}${path.sep}${file}`);
-      }
+    const files = await fs
+      .readdir(filePaths[0])
+      .then((f) => f.map((file) => `${filePaths[0]}${path.sep}${file}`));
+    const validFiles = files.filter((filename: string) => {
+      const fileType = filename.split('.').pop()?.toLowerCase();
+      return fileType === 'json' || fileType === 'geojson';
     });
 
-    const mapData = await Promise.all(promises);
+    const filesData = await Promise.all(
+      validFiles.map((filepath) =>
+        fs.readFile(filepath).then((content) => ({
+          filepath,
+          content: JSON.parse(content.toString())
+        }))
+      )
+    );
+
+    // const mapData = await Promise.all(promises);
     console.log(`MAIN: ${fileChannel}: `);
-    console.dir(
-      mapData.map((data) => (data ? JSON.parse(data.toString()) : null))
-    );
-    win?.webContents.send(
-      fileChannel,
-      mapData
-        .map((data) => (data ? JSON.parse(data.toString()) : null))
-        .filter((data) => !!data)
-    );
+    console.dir(filesData);
+    win?.webContents.send(fileChannel, filesData);
   } catch (error) {
     console.error(error);
   }
