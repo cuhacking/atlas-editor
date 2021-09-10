@@ -11,7 +11,7 @@ import { isFeatureCollection } from './util/validateJson';
 import Map from './Map';
 import Left from './Left';
 import Properties from './Properties';
-import Modal from './Modal';
+import FileErrorModal from './components/Modal/FileErrorModal';
 
 const { ipcRenderer } = window.require('electron');
 
@@ -19,30 +19,6 @@ const StyledDiv = styled.div`
   display: flex;
   width: 100vw;
   height: 100vh;
-`;
-
-const ErrorHeader = styled.h2`
-  font-size: 1rem;
-  line-height: 1.5rem;
-  margin: 0px;
-  margin-bottom: 1em;
-`;
-
-const ErrorText = styled.p`
-  font-size: 0.875rem;
-  line-height: 1.25rem;
-  margin: 0px;
-`;
-
-const ErrorList = styled.ul`
-  padding-left: 1em;
-  margin: 0px;
-`;
-
-const ErrorItem = styled.li`
-  font-size: 0.875rem;
-  line-height: 1.25rem;
-  margin: 0px;
 `;
 
 const GlobalStyle = createGlobalStyle`
@@ -107,15 +83,10 @@ const App: React.FC = () => {
         />
         <Properties features={feature} />
         {errorFiles.length > 0 ? (
-          <Modal onClose={() => setErrorFiles([])}>
-            <ErrorHeader>There was an error importing some files.</ErrorHeader>
-            <ErrorText>Files that could not be imported:</ErrorText>
-            <ErrorList>
-              {errorFiles.map((file, i) => (
-                <ErrorItem key={`${file}-${i}`}>{file}</ErrorItem>
-              ))}
-            </ErrorList>
-          </Modal>
+          <FileErrorModal
+            onClose={() => setErrorFiles([])}
+            files={errorFiles}
+          />
         ) : null}
       </StyledDiv>
     </>

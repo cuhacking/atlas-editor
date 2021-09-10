@@ -125,7 +125,6 @@ async function openFolder() {
       )
     );
 
-    // const mapData = await Promise.all(promises);
     console.log(`MAIN: ${fileChannel}: `);
     console.dir(filesData);
     win?.webContents.send(fileChannel, filesData);
