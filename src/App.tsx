@@ -1,14 +1,17 @@
 /* eslint @typescript-eslint/no-var-requires: "off" */
 import React, { useCallback, useEffect, useState } from 'react';
 import { FeatureCollection, Feature } from 'geojson';
-import Map from './Map';
 import styled, {
   createGlobalStyle // TODO: Establish a theme and hook this up to everything
 } from 'styled-components';
-import Left from './Left';
-import Properties from './Properties';
 import type { IpcRendererEvent } from 'electron';
 import { MapEvent } from 'react-map-gl';
+import { partition } from 'lodash';
+import { isFeatureCollection } from './util/validateJson';
+import Map from './Map';
+import Left from './Left';
+import Properties from './Properties';
+import FileErrorModal from './components/Modal/FileErrorModal';
 
 const { ipcRenderer } = window.require('electron');
 
@@ -29,20 +32,32 @@ const carleton = {
   longitude: -75.69608
 };
 
+interface FileData {
+  filepath: string;
+  content: FeatureCollection;
+}
+
 const fileChannel = 'file-content';
 const App: React.FC = () => {
   const [feature, setFeature] = useState<Feature[] | undefined>(undefined);
+  const [mapData, setData] = useState<FeatureCollection[] | null>(null);
+  const [errorFiles, setErrorFiles] = useState<string[]>([]);
 
   const displayFeature = useCallback(({ features }: MapEvent) => {
     setFeature(features);
   }, []);
-  const [mapData, setData] = useState<FeatureCollection[] | null>(null);
 
   const onFileOpen = useCallback(
-    (event: IpcRendererEvent, contents: FeatureCollection[]) => {
+    (event: IpcRendererEvent, contents: FileData[]) => {
       console.log(`RENDERER: ${fileChannel}`, contents);
-      setData(contents);
-      // TODO: Add file validation
+      const [validFiles, invalidFiles] = partition(contents, (f) =>
+        isFeatureCollection(f.content)
+      );
+      // if a bad file was found, num of validated files will be less than input contents
+      if (validFiles.length < contents.length) {
+        setErrorFiles(invalidFiles.map((f) => f.filepath));
+      }
+      setData(validFiles.map((f) => f.content));
     },
     []
   );
@@ -67,6 +82,12 @@ const App: React.FC = () => {
           displayFeature={displayFeature}
         />
         <Properties features={feature} />
+        {errorFiles.length > 0 ? (
+          <FileErrorModal
+            onClose={() => setErrorFiles([])}
+            files={errorFiles}
+          />
+        ) : null}
       </StyledDiv>
     </>
   );
